@@ -16,3 +16,48 @@ several of them using the reStructuredText markup notation.
 Please read the Documentation/process/changes.rst file, as it contains the
 requirements for building and running the kernel, and information about
 the problems which may result by upgrading your kernel.
+
+
+
+1. For each member in your team, provide 1 paragraph detailing what parts of the lab that member implemented / researched.
+•	Nidhi: I was responsible for setting up the kernel build environment by forking the Linux repository, cloning it, and performing the initial kernel configuration and build. I also made the changes to the KVM source code to implement the per-exit-type counters and the global exit count. I tested the printk output to ensure the statistics were being printed correctly every 10,000 total exits.
+•	Nitya: My role involved locating the exit handler function within the KVM code and adding the logic to increment the per-exit-type counters. I also assisted with the kernel build process and handled the task of testing the modified kernel in both the outer and inner VMs. Additionally, I wrote the code that triggered the printk output after every 10,000 total exits.
+
+2. Describe in detail the steps you used to complete the assignment.
+Step-by-step instructions:
+        Fork the Linux Repository:
+•	Fork the official Linux repository from to your personal GitHub account.
+        Set Up the Kernel Build Environment:
+•	Inside the cloned Linux repository, run make menuconfig to configure the kernel build.
+•	Configure the kernel with the necessary options for KVM (you may need to enable KVM support or related options).
+Add Exit Counters in KVM Code:
+•	Locate the exit handler function in the KVM source code. This is typically located in arch/x86/kvm/ or a similar directory, depending on your architecture.
+•	At the beginning of the exit handler, declare counters for each exit type and a global counter for the total exits.
+•	Increment the appropriate counter each time a VM exit occurs, based on the exit type.
+•	Every 10,000 exits, use printk () to print the exit type and its count, omitting types with zero counts.
+Build the Modified Kernel:
+•	After making the changes, rebuild the kernel
+Install and Test the Kernel:
+•	Install the newly built kernel and reboot the outer VM
+Monitor Exit Counters:
+•	Once the system reboots, boot the inner VM and periodically check the dmesg output to verify that the exit statistics are being printed correctly after every 10,000 exits
+       Final Steps:
+•	Commit your changes to the GitHub repository
+
+3. Comment on the frequency of exits – does the number of exits increase at a stable rate? Or are there more exits performed during certain VM operations? Approximately how many exits does a full VM boot entail?
+•	Frequency of Exits: The number of VM exits does not increase at a stable rate. Instead, the rate of exits often spikes during certain VM operations that require frequent interaction with the hypervisor. For example, during a VM boot process, there may be many exits due to hardware initialization, virtual device setup, or management operations. As a result, the frequency of exits tends to be much higher during specific operations, such as I/O operations or the execution of sensitive instructions that trigger exits (e.g., RDTSC or HLT).
+•	Number of Exits During a Full VM Boot: During a full VM boot, the number of exits can be significant, with several thousands of exits being triggered, especially when loading virtual devices or initializing resources. On average, the total exits during the boot process can be in the range of 10,000 to 50,000 or more, depending on the complexity of the boot sequence and the configuration of the VM.
+
+
+4. Of the exit types, which are the most frequent? Least frequent?
+•	Most Frequent Exit Types: The most frequent exit types often involve basic virtual machine interactions with the hypervisor, such as exits triggered by the HLT instruction, RDTSC (Read Time-Stamp Counter), or VMCALLinstructions. These are common operations for virtualized systems and frequently cause VM exits.
+Examples of frequently occurring exit types:
+o	RDTSC Exit
+o	HLT Exit
+o	VMCALL Exit
+•	Least Frequent Exit Types: The least frequent exit types typically involve less common operations, such as specific hardware errors or rare privileged instructions that may not be invoked often during normal VM operation.
+Examples of less frequent exit types:
+o	Page Fault Exit
+o	Interrupt Exit
+o	Exception Exit
+
