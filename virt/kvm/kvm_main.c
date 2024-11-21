@@ -66,7 +66,76 @@
 
 #include <linux/kvm_dirty_ring.h>
 
+#include <linux/kernel.h>    // For printk
+#include <linux/module.h>    // For kernel module macros
 
+// Define the maximum number of exit types based on your KVM exit types
+#define MAX_EXIT_TYPES 16
+
+// Declare the counters globally or statically in the file
+static unsigned long exit_type_counters[MAX_EXIT_TYPES] = {0};
+static unsigned long total_exits = 0;
+
+// Human-readable names for the exit types (example names, expand based on actual exit types)
+const char *exit_type_names[MAX_EXIT_TYPES] = {
+    "RDTSC Exit", "HLT Exit", "IO Exit", "Exception Exit",
+    "Interrupt Exit", "Exit Type 5", "Exit Type 6", "Exit Type 7",
+    "Exit Type 8", "Exit Type 9", "Exit Type 10", "Exit Type 11",
+    "Exit Type 12", "Exit Type 13", "Exit Type 14", "Exit Type 15"
+};
+
+// This function should be called inside the kvm_exit function to track exits
+void update_exit_counters(int exit_type)
+{
+    // Ensure the exit type is valid
+    if (exit_type < 0 || exit_type >= MAX_EXIT_TYPES) {
+        printk(KERN_ERR "Invalid exit type: %d\n", exit_type);
+        return;
+    }
+
+    // Increment the counter for this exit type and the total exit counter
+    exit_type_counters[exit_type]++;
+    total_exits++;
+
+    // Every 10,000 exits, print the exit type statistics
+    if (total_exits % 10000 == 0) {
+        printk(KERN_INFO "Total Exits: %lu\n", total_exits);
+        for (int i = 0; i < MAX_EXIT_TYPES; i++) {
+            printk(KERN_INFO "Exit type %d (%s): %lu times\n", i, exit_type_names[i], exit_type_counters[i]);
+        }
+    }
+}
+
+// This function will be called inside the KVM exit handler to update counters
+//void kvm_exit(int exit_reason)
+//{
+    // Map the exit reason to an exit type (you may need to implement your own mapping logic)
+  //  int exit_type = map_exit_reason_to_type(exit_reason);
+
+    // Call the update function to track this exit
+    //update_exit_counters(exit_type);
+}
+
+void update_exit_counters(int exit_type);
+
+int map_exit_reason_to_type(int exit_reason);
+
+int map_exit_reason_to_type(int exit_reason)
+{
+    switch (exit_reason) {
+        case VMEXIT_HLT:
+            return 0;  // "RDTSC Exit"
+        case VMEXIT_IO:
+            return 2;  // "IO Exit"
+        case VMEXIT_EXCEPTION:
+            return 3;  // "Exception Exit"
+        // Add additional cases here as needed for your specific KVM exits
+        default:
+            return -1;  // Invalid exit reason
+    }
+}
+
+EXPORT_SYMBOL_GPL(kvm_exit);
 /* Worst case buffer size needed for holding an integer. */
 #define ITOA_MAX_LEN 12
 
@@ -6541,6 +6610,26 @@ EXPORT_SYMBOL_GPL(kvm_init);
 
 void kvm_exit(void)
 {
+	// Map the exit reason to an exit type (you may need to implement your own mapping logic)
+    int exit_type = map_exit_reason_to_type(exit_reason);
+
+    // Call the update function to track this exit
+    //update function
+    update_exit_counters(exit_type);
+//      static unsigned long exit_type_counters[MAX_EXIT_TYPES] = {0};
+//static unsigned long total_exits = 0;
+
+// Inside the exit handler function
+//exit_type_counters[exit_type]++;
+//total_exits++;
+
+//if (total_exits % 10000 == 0) {
+  //  printk(KERN_INFO "Total Exits: %lu\n", total_exits);
+    //for (int i = 0; i < MAX_EXIT_TYPES; i++) {
+      //  printk(KERN_INFO "Exit type %d: %lu times\n", i, exit_type_counters[i]);
+    //}
+    //exit_type = VMEXIT_EXCEPTION;
+//}
 	int cpu;
 
 	/*
