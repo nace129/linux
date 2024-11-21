@@ -75,7 +75,7 @@ $(obj)/signing_key.x509: $(filter-out $(PKCS11_URI),$(CONFIG_MODULE_SIG_KEY)) $(
 
 targets += signing_key.x509
 
-$(obj)/revocation_certificates.o: $(obj)/x509_revocation_list
+#$(obj)/revocation_certificates.o: $(obj)/x509_revocation_list
 
 $(obj)/x509_revocation_list: $(CONFIG_SYSTEM_REVOCATION_KEYS) $(obj)/extract-cert FORCE
 	$(call if_changed,extract_certs)
